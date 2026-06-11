@@ -9,6 +9,8 @@ GitHub Pages 上的纯静态英语词库,手机在 4G / 国内任何网络下都
 - 三个板块词库:**基础 1000 / 四级 / 六级**(数据来自 ECDICT)
 - 实时搜索过滤、滚动加载分页
 - 英 / 美双发音(有道公开音频接口,客户端直连)
+- 每日记忆:按日期分组的"今日需记词汇",数据由 Claude 导入(english-vocab-web 的
+  `import_daily.py` 写库 → `build_static.py` 导出 `data/daily.json` → git push)
 - 生词本:本地 `localStorage` 增 / 删 / 搜 / JSON 粘贴导入,关浏览器数据仍在
 - 练习 tab 是占位:批改功能需要后端 + DeepSeek,在电脑版 Flask 应用使用
 
@@ -27,14 +29,15 @@ GitHub Pages 上的纯静态英语词库,手机在 4G / 国内任何网络下都
 
 ```
 lexicon-static/
-├── index.html          # 静态页(viewport meta + 五个 tab 骨架)
+├── index.html          # 静态页(viewport meta + 六个 tab 骨架)
 ├── static/
 │   ├── style.css       # 由 build_static.py 从 Flask 版同步
 │   └── app.js          # 静态版独立维护(fetch ./data + localStorage)
 └── data/
     ├── basic.json      # 1000 词
     ├── cet4.json       # 3849 词
-    └── cet6.json       # 5407 词
+    ├── cet6.json       # 5407 词
+    └── daily.json      # 每日记忆,键 = 日期(如 "2026-06-11")
 ```
 
 ## 部署
