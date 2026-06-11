@@ -670,3 +670,44 @@ body {
   /* 候选下拉里翻译文字给一点最大宽度防溢出 */
   .practice-suggest__trans { max-width: 60%; }
 }
+
+/* ============================================================
+   每日记忆:日期标签条 + 标题
+   ============================================================ */
+.daybar {
+  display: flex;
+  gap: 6px;
+  margin-top: 18px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.daybar::-webkit-scrollbar { display: none; }
+.daybar__chip {
+  appearance: none;
+  border: 1px solid var(--hair);
+  background: none;
+  cursor: pointer;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 5px 12px;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+.daybar__chip:hover { color: var(--trans); border-color: var(--trans); }
+.daybar__chip.is-active {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.daily-title {
+  margin-top: 14px;
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 0.95rem;
+  color: var(--trans);
+}

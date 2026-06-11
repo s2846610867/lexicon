@@ -26,6 +26,8 @@
     ? importToggle.querySelector(".import-panel__toggle-arrow")
     : null;
   var practicePanel = document.getElementById("practice-panel");
+  var daybar = document.getElementById("daybar");
+  var dailyTitle = document.getElementById("daily-title");
 
   var DEFAULT_PLACEHOLDER = "键入字母,实时过滤……";
   var MY_PLACEHOLDER = "搜单词或原句……";
@@ -44,6 +46,7 @@
     total: 0,
     loading: false,
     filtered: [],       // 当前 section 经搜索过滤后的全量结果
+    dailyDate: "",      // 每日记忆当前选中的日期(ISO)
   };
 
   // ---------- 文本规整 ----------
@@ -84,6 +87,56 @@
       });
     });
     lookup = L;
+  }
+
+  // ---------- 每日记忆 ----------
+  function fmtDay(iso) {            // "2026-06-11" -> "6.11"
+    var p = String(iso || "").split("-");
+    if (p.length !== 3) return iso;
+    return parseInt(p[1], 10) + "." + parseInt(p[2], 10);
+  }
+
+  function ensureDailyLoaded() {
+    if (dataCache.daily) return Promise.resolve(dataCache.daily);
+    return fetch(DATA_BASE + "daily.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        dataCache.daily = data && typeof data === "object" ? data : {};
+        return dataCache.daily;
+      });
+  }
+
+  function dailyDates() {
+    return Object.keys(dataCache.daily || {}).sort().reverse();
+  }
+
+  function renderDaybar() {
+    if (!daybar) return;
+    daybar.innerHTML = "";
+    dailyDates().forEach(function (d) {
+      var chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "daybar__chip" + (d === state.dailyDate ? " is-active" : "");
+      chip.textContent = fmtDay(d);
+      chip.addEventListener("click", function () {
+        if (state.dailyDate === d) return;
+        state.dailyDate = d;
+        renderDaybar();
+        updateDailyTitle();
+        fetchPage(true);
+      });
+      daybar.appendChild(chip);
+    });
+  }
+
+  function updateDailyTitle() {
+    if (!dailyTitle) return;
+    dailyTitle.textContent = state.dailyDate
+      ? fmtDay(state.dailyDate) + " 需记词汇"
+      : "";
   }
 
   // ---------- 生词本 localStorage ----------
@@ -240,6 +293,14 @@
 
   // 当前 section 取过滤后的列表(客户端分页)
   function computeFiltered() {
+    if (state.section === "daily") {
+      var dayWords = (dataCache.daily || {})[state.dailyDate] || [];
+      if (!state.q) return dayWords;
+      var dlq = state.q.toLowerCase();
+      return dayWords.filter(function (w) {
+        return (w.word || "").toLowerCase().indexOf(dlq) !== -1;
+      });
+    }
     if (state.section === "my") {
       var rows = searchMyWords(state.q);
       // 用 lookup 补音标/释义
@@ -292,9 +353,12 @@
 
     updateCount();
     if (state.total === 0) {
-      var emptyHint = state.section === "my"
-        ? '生词本还是空的。点上方"导入生词"粘贴 JSON。'
-        : "没有匹配的词。";
+      var emptyHint = "没有匹配的词。";
+      if (state.section === "my") {
+        emptyHint = '生词本还是空的。点上方"导入生词"粘贴 JSON。';
+      } else if (state.section === "daily" && dailyDates().length === 0) {
+        emptyHint = "还没有每日词汇。把当天的词表发给 Claude 导入。";
+      }
       list.innerHTML = '<div class="notice">' + emptyHint + "</div>";
       foot.textContent = "";
     } else {
@@ -325,6 +389,9 @@
   function applySectionUI() {
     var isMy = state.section === "my";
     var isPractice = state.section === "practice";
+    var isDaily = state.section === "daily";
+    if (daybar) daybar.hidden = !isDaily;
+    if (dailyTitle) dailyTitle.hidden = !isDaily;
     if (importPanel) importPanel.hidden = !isMy;
     if (practicePanel) practicePanel.hidden = !isPractice;
     if (searchbar) searchbar.hidden = isPractice;
@@ -415,6 +482,23 @@
       applySectionUI();
 
       if (state.section === "practice") return;       // 占位提示,无数据
+      if (state.section === "daily") {
+        ensureDailyLoaded()
+          .then(function () {
+            var dates = dailyDates();
+            if (!state.dailyDate || dates.indexOf(state.dailyDate) === -1) {
+              state.dailyDate = dates[0] || "";
+            }
+            renderDaybar();
+            updateDailyTitle();
+            fetchPage(true);
+          })
+          .catch(function () {
+            list.innerHTML = '<div class="notice">数据加载失败,请刷新重试。</div>';
+            foot.textContent = "";
+          });
+        return;
+      }
       if (state.section === "my") { fetchPage(true); return; }
       // 静态板块:可能未加载完,先 ensureLoaded 再渲染
       ensureLoaded(state.section).then(function () { fetchPage(true); })
