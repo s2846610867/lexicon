@@ -1,0 +1,672 @@
+/* ============================================================
+   词库 · Lexicon —— 编辑式极简纸质词典风
+   暖白纸底 · 近黑文字 · 衬线正文 · 单色克制
+   硬约束:单词本体高对比、清晰可读
+   ============================================================ */
+
+:root {
+  --paper:      #f7f6f4;   /* 暖白纸底 */
+  --paper-deep: #efece7;   /* 略深的纸色,用于极轻的分区 */
+  --ink:        #16150f;   /* 近黑正文 */
+  --word:       #161512;   /* 单词主体(高对比) */
+  --phon:       #a39e93;   /* 音标 浅灰 */
+  --trans:      #59554c;   /* 释义 中灰 */
+  --muted:      #8d887d;   /* 次要文字 */
+  --hair:       rgba(22, 21, 15, 0.10);  /* 细分隔线 */
+  --hair-soft:  rgba(22, 21, 15, 0.05);
+  --accent:     #16150f;   /* 唯一“强调”=近黑,不引入彩色 */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Newsreader", "Noto Serif SC", Georgia, serif;
+  line-height: 1.5;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 28px 30vh;
+  position: relative;
+}
+
+/* 极轻的纸张颗粒,营造氛围而非装饰 */
+.grain {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- 报头 ---------- */
+.masthead {
+  padding: 72px 0 30px;
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.mark { display: flex; align-items: baseline; gap: 14px; }
+.mark__en {
+  font-family: "Fraunces", serif;
+  font-weight: 600;
+  font-size: clamp(2.4rem, 7vw, 3.4rem);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  line-height: 1;
+}
+.mark__cn {
+  font-family: "Noto Serif SC", serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.35em;
+  color: var(--muted);
+  padding-left: 2px;
+}
+.masthead__sub {
+  margin-top: 14px;
+  font-size: 0.92rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+/* ---------- 板块切换:低调文字 + 下划线游标 ---------- */
+.tabs {
+  position: sticky; top: 0; z-index: 5;
+  display: flex; gap: 30px;
+  padding: 18px 0 16px;
+  background: linear-gradient(var(--paper) 72%, transparent);
+  border-bottom: 1px solid var(--hair);
+}
+.tab {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+  padding: 2px 0;
+  transition: color 0.35s ease;
+}
+.tab:hover { color: var(--trans); }
+.tab.is-active { color: var(--ink); }
+.tabs__ink {
+  position: absolute; bottom: -1px; left: 0; height: 1.5px;
+  background: var(--accent);
+  transition: transform 0.4s cubic-bezier(0.5, 0, 0.1, 1), width 0.4s cubic-bezier(0.5, 0, 0.1, 1);
+}
+
+/* ---------- 搜索框:下划线式 ---------- */
+.searchbar {
+  display: flex; align-items: baseline; gap: 16px;
+  padding: 28px 0 8px;
+}
+.searchbar__input {
+  flex: 1; min-width: 0;
+  appearance: none; border: 0; background: none; outline: none;
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 1.12rem;
+  color: var(--ink);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hair);
+  transition: border-color 0.3s ease;
+}
+.searchbar__input::placeholder { color: #bbb6aa; font-style: italic; }
+.searchbar__input:focus { border-bottom-color: var(--ink); }
+.searchbar__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.searchbar__count {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ---------- 词条列表 ---------- */
+.list { padding-top: 6px; }
+
+.entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "head play"
+    "trans play";
+  column-gap: 18px;
+  align-items: start;
+  padding: 18px 2px;
+  border-bottom: 1px solid var(--hair-soft);
+  animation: fade 0.5s ease both;
+}
+.entry:hover { background: linear-gradient(90deg, transparent, var(--paper-deep) 12%, var(--paper-deep) 88%, transparent); }
+
+.entry__head {
+  grid-area: head;
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px;
+}
+.entry__word {
+  font-family: "Newsreader", serif;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--word);            /* 高对比,清晰可读 */
+  letter-spacing: -0.005em;
+}
+.entry__phon {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  color: var(--phon);
+  letter-spacing: 0;
+}
+.entry__trans {
+  grid-area: trans;
+  margin-top: 5px;
+  font-family: "Noto Serif SC", "Newsreader", serif;
+  font-size: 0.98rem;
+  color: var(--trans);
+  line-height: 1.55;
+  white-space: pre-line;  /* 让 unescapeNewlines 后的 \n 真换行 */
+}
+
+/* 播放标签:"英 / 美"两个克制的小文字按钮 */
+.play-group {
+  grid-area: play;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.play {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  opacity: 0.6;
+  padding: 4px 2px;
+  transition: color 0.25s ease, opacity 0.25s ease;
+}
+.entry:hover .play { opacity: 1; }
+.play:hover { color: var(--ink); }
+.play.is-playing { color: var(--ink); animation: pulse 0.6s ease infinite; }
+
+/* ---------- 生词本:导入面板(折叠) ---------- */
+.import-panel {
+  margin-top: 18px;
+  border-top: 1px solid var(--hair-soft);
+  border-bottom: 1px solid var(--hair-soft);
+}
+.import-panel__toggle {
+  appearance: none; border: 0; background: none; cursor: pointer;
+  width: 100%;
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding: 14px 0;
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.96rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  transition: color 0.25s ease;
+}
+.import-panel__toggle:hover { color: var(--ink); }
+.import-panel__toggle-arrow {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.import-panel__body {
+  padding: 4px 0 20px;
+  animation: fade 0.35s ease both;
+}
+.import-panel__input {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  padding: 12px 14px;
+  border-radius: 2px;
+  outline: none;
+  resize: vertical;
+  min-height: 140px;
+  transition: border-color 0.25s ease;
+}
+.import-panel__input:focus { border-color: var(--ink); }
+.import-panel__input::placeholder { color: #bbb6aa; }
+.import-panel__actions {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+}
+.import-panel__btn {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  padding: 7px 22px;
+  border-radius: 2px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.import-panel__btn:hover { background: var(--ink); color: var(--paper); }
+.import-panel__btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+  background: transparent;
+  color: var(--ink);
+}
+.import-panel__hint {
+  flex: 1;
+  text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.import-panel__result {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-left: 2px solid var(--hair);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--trans);
+  word-break: break-word;
+}
+.import-panel__result.is-ok { border-left-color: var(--ink); color: var(--ink); }
+.import-panel__result.is-error { border-left-color: var(--ink); color: var(--ink); background: var(--paper-deep); }
+
+/* ---------- 生词本:词条扩展(原句 / 来源·日期 / 未收录) ---------- */
+.entry--my {
+  grid-template-areas:
+    "head play"
+    "trans play"
+    "ctx ctx"
+    "meta meta";
+}
+.entry__trans--missing {
+  font-style: italic;
+  color: var(--muted);
+}
+.entry__context {
+  grid-area: ctx;
+  margin: 10px 0 0;
+  padding: 2px 0 2px 14px;
+  border-left: 2px solid var(--hair);
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-style: italic;
+  font-size: 0.94rem;
+  line-height: 1.6;
+  color: var(--trans);
+}
+.entry__meta {
+  grid-area: meta;
+  margin-top: 8px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+/* ---------- 状态/页脚 ---------- */
+.sentinel { height: 1px; }
+.foot {
+  text-align: center;
+  padding: 36px 0 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.notice {
+  padding: 56px 4px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+.notice code {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  background: var(--paper-deep);
+  padding: 2px 7px; border-radius: 3px;
+  color: var(--trans);
+}
+
+/* ---------- 动效:克制 ---------- */
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+/* ============================================================
+   练习页 —— 选词 / 造句 / 批改卡片
+   ============================================================ */
+
+.practice-panel {
+  padding: 14px 0 30px;
+  animation: fade 0.4s ease both;
+}
+
+.practice-step {
+  margin-top: 22px;
+}
+.practice-step:first-child { margin-top: 0; }
+
+.practice-label {
+  display: block;
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.84rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* 选词:下划线输入框 + 浮层建议列表 */
+.practice-search { position: relative; }
+.practice-input {
+  width: 100%;
+  appearance: none;
+  border: 0; border-bottom: 1px solid var(--hair);
+  background: none; outline: none;
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 1.12rem;
+  color: var(--ink);
+  padding: 6px 0;
+  transition: border-color 0.3s ease;
+}
+.practice-input:focus { border-bottom-color: var(--ink); }
+.practice-input::placeholder { color: #bbb6aa; font-style: italic; }
+.practice-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+.practice-suggest {
+  position: absolute; left: 0; right: 0; top: 100%;
+  z-index: 10;
+  list-style: none; margin: 0; padding: 6px 0;
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  max-height: 320px; overflow-y: auto;
+  box-shadow: 0 6px 16px rgba(22, 21, 15, 0.04);
+}
+.practice-suggest__item {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 16px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.practice-suggest__item:hover { background: var(--paper-deep); }
+.practice-suggest__word {
+  font-family: "Newsreader", serif;
+  font-size: 1.04rem;
+  color: var(--ink);
+}
+.practice-suggest__trans {
+  flex: 1;
+  text-align: right;
+  font-family: "Noto Serif SC", serif;
+  font-size: 0.84rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 词条预览 */
+.practice-entry {
+  margin-top: 22px;
+  padding: 16px 18px;
+  background: var(--paper-deep);
+  border-radius: 2px;
+  animation: fade 0.3s ease both;
+}
+.practice-entry__head { margin-bottom: 8px; }
+.practice-entry__word {
+  font-family: "Newsreader", serif;
+  font-size: 1.4rem;
+  font-weight: 500;
+  color: var(--word);
+  letter-spacing: -0.005em;
+}
+.practice-entry__field {
+  display: flex; align-items: baseline;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.practice-entry__label {
+  flex-shrink: 0;
+  width: 54px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+  padding-top: 3px;
+}
+.practice-entry__value {
+  flex: 1;
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  color: var(--trans);
+  white-space: pre-line;  /* 让 unescapeNewlines 后的 \n 真换行 */
+}
+
+/* 造句区 */
+.practice-textarea {
+  width: 100%;
+  appearance: none;
+  border: 1px solid var(--hair);
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  padding: 12px 14px;
+  border-radius: 2px;
+  outline: none;
+  resize: vertical;
+  min-height: 86px;
+  transition: border-color 0.25s ease;
+}
+.practice-textarea:focus { border-color: var(--ink); }
+.practice-textarea::placeholder { color: #bbb6aa; font-style: italic; }
+
+.practice-actions {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 14px;
+  margin-top: 12px;
+}
+.practice-btn {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.96rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 8px 28px;
+  border-radius: 2px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.practice-btn:hover { background: var(--ink); color: var(--paper); }
+.practice-btn:disabled { cursor: default; opacity: 0.4; background: transparent; color: var(--ink); }
+.practice-hint {
+  flex: 1; text-align: right;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* 批改卡片 */
+.grade-card {
+  margin-top: 28px;
+  padding: 22px 20px 20px;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  background: var(--paper);
+  animation: fade 0.35s ease both;
+}
+.grade-card--loading,
+.grade-card--error { border-color: var(--hair); }
+.grade-card--good { border-left: 3px solid var(--ink); }
+.grade-card--minor_issue { border-left: 3px solid var(--trans); }
+.grade-card--wrong { border-left: 3px solid var(--ink); background: var(--paper-deep); }
+
+.grade-card__verdict {
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 1.04rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+.grade-card--minor_issue .grade-card__verdict { color: var(--trans); }
+
+.grade-card__feedback {
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ink);
+}
+.grade-card__basis {
+  margin: 14px 0 0;
+  padding: 8px 14px;
+  border-left: 2px solid var(--hair);
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--trans);
+}
+.grade-card__basis-label {
+  font-family: "JetBrains Mono", monospace;
+  font-style: normal;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-right: 4px;
+  text-transform: uppercase;
+}
+.grade-card__suggestion {
+  margin-top: 14px;
+  display: flex; align-items: baseline; gap: 12px;
+  flex-wrap: wrap;
+}
+.grade-card__label {
+  flex-shrink: 0;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.grade-card__suggestion-text {
+  flex: 1;
+  font-family: "Newsreader", serif;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.grade-card__actions {
+  display: flex; align-items: baseline; gap: 16px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hair-soft);
+}
+.grade-card__btn {
+  appearance: none; cursor: pointer;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  font-family: "Fraunces", "Noto Serif SC", serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  padding: 6px 18px;
+  border-radius: 2px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.grade-card__btn:hover { background: var(--ink); color: var(--paper); }
+.grade-card__btn:disabled { cursor: default; opacity: 0.4; background: transparent; color: var(--ink); }
+.grade-card__add-result {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.grade-card__add-result.is-ok { color: var(--ink); }
+.grade-card__add-result.is-error { color: var(--ink); }
+.grade-card__add-result.is-info { color: var(--trans); }
+
+.grade-card__loading {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  animation: pulse 1.4s ease infinite;
+}
+.grade-card__error {
+  font-family: "Newsreader", "Noto Serif SC", serif;
+  font-size: 0.96rem;
+  line-height: 1.55;
+  color: var(--ink);
+  padding-left: 12px;
+  border-left: 2px solid var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+@media (max-width: 560px) {
+  body { padding: 0 20px 30vh; }
+  .entry__word { font-size: 1.34rem; }
+
+  /* tabs: 5 个板块在窄屏可能塞不下,改横向滚动(去掉滚动条) */
+  .tabs {
+    gap: 22px;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { flex-shrink: 0; }
+  /* JS 下划线游标在横滚容器里位置失准,小屏改用 box-shadow 模拟 */
+  .tabs__ink { display: none; }
+  .tab.is-active { box-shadow: inset 0 -1.5px 0 var(--accent); }
+
+  /* 导入面板 / 练习按钮区 / 批改卡片按钮区:横排改竖排 */
+  .import-panel__actions,
+  .practice-actions,
+  .grade-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .import-panel__hint,
+  .practice-hint { text-align: left; }
+
+  /* 词条预览 field:label 上、value 下 */
+  .practice-entry__field {
+    flex-direction: column;
+    gap: 4px;
+  }
+  .practice-entry__label { width: auto; padding-top: 0; }
+
+  /* 推荐改写 label + 句子 改竖排 */
+  .grade-card__suggestion {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* 候选下拉里翻译文字给一点最大宽度防溢出 */
+  .practice-suggest__trans { max-width: 60%; }
+}

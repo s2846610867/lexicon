@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code 本地配置
+.claude/

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>词库 · Lexicon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./static/style.css" />
+  <style>
+    /* 静态版独有:练习页占位提示(电脑版才有真功能) */
+    .practice-static-hint {
+      margin-top: 40px;
+      padding: 28px 24px;
+      border-left: 2px solid var(--hair);
+      animation: fade 0.4s ease both;
+    }
+    .practice-static-hint p {
+      font-family: "Newsreader", "Noto Serif SC", serif;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--trans);
+      margin: 0;
+    }
+    .practice-static-hint p + p { margin-top: 6px; color: var(--muted); }
+
+    /* 静态版独有:生词本词条右下角的「删除」按钮 */
+    .entry--my { position: relative; }
+    .entry__del {
+      position: absolute;
+      right: 2px;
+      bottom: 6px;
+      appearance: none; border: 0; background: none; cursor: pointer;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      opacity: 0.6;
+      padding: 4px 6px;
+      transition: color 0.2s ease, opacity 0.2s ease;
+    }
+    .entry:hover .entry__del { opacity: 1; }
+    .entry__del:hover { color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="masthead">
+    <div class="mark">
+      <span class="mark__en">Lexicon</span>
+      <span class="mark__cn">英语词库</span>
+    </div>
+    <p class="masthead__sub">基础 1000 · 四级 · 六级 · 英 / 美双发音</p>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" role="tab" data-section="basic">基础 1000</button>
+    <button class="tab" role="tab" data-section="cet4">四级</button>
+    <button class="tab" role="tab" data-section="cet6">六级</button>
+    <button class="tab" role="tab" data-section="my">生词本</button>
+    <button class="tab" role="tab" data-section="practice">练习</button>
+    <span class="tabs__ink" aria-hidden="true"></span>
+  </nav>
+
+  <div class="searchbar">
+    <input
+      type="search"
+      id="search"
+      class="searchbar__input"
+      placeholder="键入字母,实时过滤……"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <span class="searchbar__count" id="count"></span>
+  </div>
+
+  <section class="import-panel" id="import-panel" hidden>
+    <button
+      type="button"
+      class="import-panel__toggle"
+      id="import-toggle"
+      aria-expanded="false"
+      aria-controls="import-body"
+    >
+      <span class="import-panel__toggle-label">导入生词</span>
+      <span class="import-panel__toggle-arrow" aria-hidden="true">▾</span>
+    </button>
+    <div class="import-panel__body" id="import-body" hidden>
+      <textarea
+        id="import-input"
+        class="import-panel__input"
+        rows="8"
+        spellcheck="false"
+        placeholder='[{"word": "negotiate", "context": "原句", "source": "来源"}]'
+      ></textarea>
+      <div class="import-panel__actions">
+        <button type="button" class="import-panel__btn" id="import-submit">导入</button>
+        <span class="import-panel__hint">JSON 数组,每项需有 word;context / source 可选</span>
+      </div>
+      <div class="import-panel__result" id="import-result" hidden></div>
+    </div>
+  </section>
+
+  <section class="practice-panel" id="practice-panel" hidden>
+    <div class="practice-static-hint">
+      <p>造句批改需要后端 + DeepSeek key。</p>
+      <p>请在电脑版 Lexicon (Flask 应用) 使用此功能。</p>
+    </div>
+  </section>
+
+  <main class="list" id="list" aria-live="polite"></main>
+
+  <div class="sentinel" id="sentinel"></div>
+  <div class="foot" id="foot"></div>
+
+  <script src="./static/app.js"></script>
+</body>
+</html>
