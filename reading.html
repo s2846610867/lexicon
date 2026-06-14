@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>精读 · Lexicon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="./static/style.css" />
+  <style>
+    /* ===== 精读页专属样式(自包含,不依赖 build_static 同步) ===== */
+    .reading-top { display: flex; align-items: baseline; gap: 14px; margin-top: 8px; }
+    .reading-top a { font-family: "JetBrains Mono", monospace; font-size: 0.8rem;
+      color: var(--muted); text-decoration: none; }
+    .reading-top a:hover { color: var(--ink); }
+
+    /* 文章列表 */
+    .art-list { margin-top: 20px; display: flex; flex-direction: column; gap: 2px; }
+    .art-card {
+      appearance: none; border: 0; background: none; cursor: pointer; text-align: left;
+      width: 100%; padding: 16px 0; border-bottom: 1px solid var(--hair);
+      display: block; transition: opacity 0.2s ease;
+    }
+    .art-card:hover { opacity: 0.65; }
+    .art-card__title { font-family: "Newsreader", serif; font-size: 1.15rem; color: var(--ink); }
+    .art-card__cn { font-family: "Noto Serif SC", serif; font-size: 0.9rem; color: var(--trans); margin-top: 2px; }
+    .art-card__meta { font-family: "JetBrains Mono", monospace; font-size: 0.72rem;
+      color: var(--muted); margin-top: 6px; letter-spacing: 0.04em; }
+
+    /* 文章详情 */
+    #detail-view { margin-top: 14px; }
+    .detail-back { appearance: none; border: 0; background: none; cursor: pointer;
+      font-family: "JetBrains Mono", monospace; font-size: 0.8rem; color: var(--muted); padding: 4px 0; }
+    .detail-back:hover { color: var(--ink); }
+    .detail-title { font-family: "Newsreader", serif; font-size: 1.5rem; color: var(--ink); margin-top: 10px; }
+    .detail-cn { font-family: "Noto Serif SC", serif; font-size: 1rem; color: var(--trans); margin-top: 4px; }
+    .detail-meta { font-family: "JetBrains Mono", monospace; font-size: 0.72rem; color: var(--muted);
+      margin-top: 8px; letter-spacing: 0.04em; }
+
+    .para { margin-top: 26px; }
+    .para__en { font-family: "Newsreader", serif; font-size: 1.15rem; line-height: 1.9; color: var(--ink); }
+    .rw { cursor: pointer; border-radius: 3px; transition: background 0.12s ease; }
+    .rw:hover { background: var(--hair); }
+    .rw.is-active { background: var(--ink); color: var(--paper); }
+    .para__toggle { appearance: none; border: 0; background: none; cursor: pointer; margin-top: 8px;
+      font-family: "JetBrains Mono", monospace; font-size: 0.74rem; color: var(--muted); padding: 2px 0; }
+    .para__toggle:hover { color: var(--ink); }
+    .para__cn { font-family: "Noto Serif SC", serif; font-size: 0.96rem; line-height: 1.8;
+      color: var(--trans); margin-top: 8px; padding-left: 12px; border-left: 2px solid var(--hair); }
+
+    /* 词卡(底部浮层) */
+    .word-card {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      max-width: 720px; margin: 0 auto; background: var(--paper);
+      border-top: 1px solid var(--ink); box-shadow: 0 -8px 30px rgba(22,21,15,0.10);
+      padding: 18px 24px 22px; animation: cardup 0.18s ease both;
+    }
+    @keyframes cardup { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .word-card__head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+    .word-card__word { font-family: "Fraunces", serif; font-size: 1.5rem; color: var(--ink); }
+    .word-card__phon { font-family: "JetBrains Mono", monospace; font-size: 0.9rem; color: var(--phon); }
+    .word-card__close { margin-left: auto; appearance: none; border: 0; background: none; cursor: pointer;
+      font-family: "JetBrains Mono", monospace; font-size: 1rem; color: var(--muted); }
+    .word-card__meaning { font-family: "Newsreader","Noto Serif SC",serif; font-size: 1rem; line-height: 1.7;
+      color: var(--trans); margin-top: 10px; white-space: pre-line; }
+    .word-card__actions { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .play { appearance: none; cursor: pointer; border: 1px solid var(--hair); background: none;
+      font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--trans);
+      padding: 5px 12px; border-radius: 999px; }
+    .play:hover { border-color: var(--ink); color: var(--ink); }
+    .play.is-playing { background: var(--ink); color: var(--paper); }
+    .word-card__add { appearance: none; cursor: pointer; border: 1px solid var(--ink); background: var(--ink);
+      color: var(--paper); font-family: "JetBrains Mono", monospace; font-size: 0.75rem;
+      padding: 6px 14px; border-radius: 999px; margin-left: auto; }
+    .word-card__add:disabled { opacity: 0.5; cursor: default; }
+    .word-card__missing { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="masthead">
+    <div class="mark">
+      <span class="mark__en">Lexicon</span>
+      <span class="mark__cn">精读</span>
+    </div>
+    <div class="reading-top">
+      <a href="./index.html">← 返回词库</a>
+    </div>
+  </header>
+
+  <main id="list-view">
+    <div class="art-list" id="article-list"></div>
+  </main>
+
+  <main id="detail-view" hidden>
+    <button class="detail-back" id="back-btn">← 文章列表</button>
+    <div id="detail-body"></div>
+  </main>
+
+  <div id="word-card-host"></div>
+
+  <script src="./static/reading.js"></script>
+</body>
+</html>
