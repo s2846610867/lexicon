@@ -19,7 +19,7 @@
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="./static/style.css?v=themes" />
+  <link rel="stylesheet" href="./static/style.css?v=nc1" />
   <style>
     /* 静态版独有:练习页占位提示(电脑版才有真功能) */
     .practice-static-hint {
@@ -54,6 +54,28 @@
     }
     .entry:hover .entry__del { opacity: 1; }
     .entry__del:hover { color: var(--ink); }
+
+    /* 静态版独有:新概念一「选课」下拉框 */
+    .nc1-lesson {
+      margin-top: 16px;
+      appearance: none; -webkit-appearance: none;
+      border: 1px solid var(--hair);
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.02em;
+      padding: 8px 34px 8px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      outline: none;
+      max-width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238d887d' stroke-width='1.4' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 13px center;
+      transition: border-color 0.25s ease;
+    }
+    .nc1-lesson:focus, .nc1-lesson:hover { border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -70,7 +92,8 @@
   </header>
 
   <nav class="tabs" role="tablist">
-    <button class="tab is-active" role="tab" data-section="basic">基础 1000</button>
+    <button class="tab is-active" role="tab" data-section="nc1">新概念一</button>
+    <button class="tab" role="tab" data-section="basic">基础 1000</button>
     <button class="tab" role="tab" data-section="cet4">四级</button>
     <button class="tab" role="tab" data-section="cet6">六级</button>
     <button class="tab" role="tab" data-section="daily">每日记忆</button>
@@ -90,6 +113,8 @@
     />
     <span class="searchbar__count" id="count"></span>
   </div>
+
+  <select id="nc1-lesson" class="nc1-lesson" hidden autocomplete="off" aria-label="选择课次"></select>
 
   <nav class="daybar" id="daybar" hidden aria-label="选择日期"></nav>
   <div class="daily-title" id="daily-title" hidden></div>

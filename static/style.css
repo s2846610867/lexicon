@@ -36,6 +36,9 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* hidden 属性要始终生效:.daybar/.searchbar 等带 display 的类会盖过 [hidden] 默认值 */
+[hidden] { display: none !important; }
+
 html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 
 body {

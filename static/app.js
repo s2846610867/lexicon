@@ -28,6 +28,7 @@
   var practicePanel = document.getElementById("practice-panel");
   var daybar = document.getElementById("daybar");
   var dailyTitle = document.getElementById("daily-title");
+  var nc1Select = document.getElementById("nc1-lesson");
 
   var DEFAULT_PLACEHOLDER = "键入字母,实时过滤……";
   var MY_PLACEHOLDER = "搜单词或原句……";
@@ -47,6 +48,7 @@
     loading: false,
     filtered: [],       // 当前 section 经搜索过滤后的全量结果
     dailyDate: "",      // 每日记忆当前选中的日期(ISO)
+    nc1Lesson: "",      // 新概念一当前选中的课次
   };
 
   // ---------- 文本规整 ----------
@@ -137,6 +139,60 @@
     dailyTitle.textContent = state.dailyDate
       ? fmtDay(state.dailyDate) + " 需记词汇"
       : "";
+  }
+
+  // ---------- 新概念一(按课分组,选课下拉) ----------
+  function ensureNc1Loaded() {
+    if (dataCache.nc1) return Promise.resolve(dataCache.nc1);
+    return fetch(DATA_BASE + "nc1.json")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        dataCache.nc1 = data && typeof data === "object" ? data : {};
+        return dataCache.nc1;
+      });
+  }
+
+  function nc1Lessons() {
+    return Object.keys(dataCache.nc1 || {});   // 保留课次顺序(Lesson 1-2 在前)
+  }
+
+  function renderNc1Select() {
+    if (!nc1Select) return;
+    nc1Select.innerHTML = "";
+    nc1Lessons().forEach(function (l) {
+      var o = document.createElement("option");
+      o.value = l;
+      o.textContent = l;
+      if (l === state.nc1Lesson) o.selected = true;
+      nc1Select.appendChild(o);
+    });
+    nc1Select.value = state.nc1Lesson;   // 显式设定,避免浏览器恢复旧选值
+  }
+
+  function enterNc1() {
+    ensureNc1Loaded()
+      .then(function () {
+        var lessons = nc1Lessons();
+        if (!state.nc1Lesson || lessons.indexOf(state.nc1Lesson) === -1) {
+          state.nc1Lesson = lessons[0] || "";
+        }
+        renderNc1Select();
+        fetchPage(true);
+      })
+      .catch(function () {
+        list.innerHTML = '<div class="notice">数据加载失败,请刷新重试。</div>';
+        foot.textContent = "";
+      });
+  }
+
+  if (nc1Select) {
+    nc1Select.addEventListener("change", function () {
+      state.nc1Lesson = nc1Select.value;
+      fetchPage(true);
+    });
   }
 
   // ---------- 生词本 localStorage ----------
@@ -301,6 +357,14 @@
         return (w.word || "").toLowerCase().indexOf(dlq) !== -1;
       });
     }
+    if (state.section === "nc1") {
+      var lessonWords = (dataCache.nc1 || {})[state.nc1Lesson] || [];
+      if (!state.q) return lessonWords;
+      var nlq = state.q.toLowerCase();
+      return lessonWords.filter(function (w) {
+        return (w.word || "").toLowerCase().indexOf(nlq) !== -1;
+      });
+    }
     if (state.section === "my") {
       var rows = searchMyWords(state.q);
       // 用 lookup 补音标/释义
@@ -358,6 +422,8 @@
         emptyHint = '生词本还是空的。点上方"导入生词"粘贴 JSON。';
       } else if (state.section === "daily" && dailyDates().length === 0) {
         emptyHint = "还没有每日词汇。把当天的词表发给 Claude 导入。";
+      } else if (state.section === "nc1" && nc1Lessons().length === 0) {
+        emptyHint = "新概念一词库加载失败,请刷新重试。";
       }
       list.innerHTML = '<div class="notice">' + emptyHint + "</div>";
       foot.textContent = "";
@@ -390,8 +456,10 @@
     var isMy = state.section === "my";
     var isPractice = state.section === "practice";
     var isDaily = state.section === "daily";
+    var isNc1 = state.section === "nc1";
     if (daybar) daybar.hidden = !isDaily;
     if (dailyTitle) dailyTitle.hidden = !isDaily;
+    if (nc1Select) nc1Select.hidden = !isNc1;
     if (importPanel) importPanel.hidden = !isMy;
     if (practicePanel) practicePanel.hidden = !isPractice;
     if (searchbar) searchbar.hidden = isPractice;
@@ -499,6 +567,7 @@
           });
         return;
       }
+      if (state.section === "nc1") { enterNc1(); return; }
       if (state.section === "my") { fetchPage(true); return; }
       // 静态板块:可能未加载完,先 ensureLoaded 再渲染
       ensureLoaded(state.section).then(function () { fetchPage(true); })
@@ -533,12 +602,18 @@
   moveInk(tabs[0]);
   applySectionUI();
 
-  // 首屏:拉 basic + 渲染;并行后台拉 cet4/cet6 让 lookup 完整
-  ensureLoaded("basic").then(function () { fetchPage(true); })
-    .catch(function () {
-      list.innerHTML = '<div class="notice">数据加载失败,请刷新页面重试。</div>';
-      foot.textContent = "";
-    });
-  ensureLoaded("cet4").catch(function () { /* 静默,影响只是生词本 lookup */ });
+  // 首屏:默认板块 = 新概念一(第一个 tab),渲染它;
+  // 后台并行拉 basic/cet4/cet6 让生词本 lookup 完整(不渲染)
+  if (state.section === "nc1") {
+    enterNc1();
+  } else {
+    ensureLoaded(state.section).then(function () { fetchPage(true); })
+      .catch(function () {
+        list.innerHTML = '<div class="notice">数据加载失败,请刷新页面重试。</div>';
+        foot.textContent = "";
+      });
+  }
+  ensureLoaded("basic").catch(function () { /* 静默,仅影响生词本 lookup */ });
+  ensureLoaded("cet4").catch(function () { /* 同上 */ });
   ensureLoaded("cet6").catch(function () { /* 同上 */ });
 })();
