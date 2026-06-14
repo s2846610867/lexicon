@@ -4,13 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>词库 · Lexicon</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("lexicon_theme");
+        var ok = ["ink-green", "night", "terracotta", "celadon"].indexOf(t) > -1;
+        document.documentElement.setAttribute("data-theme", ok ? t : "ink-green");
+      } catch (e) { document.documentElement.setAttribute("data-theme", "ink-green"); }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="./static/style.css" />
+  <link rel="stylesheet" href="./static/style.css?v=themes" />
   <style>
     /* 静态版独有:练习页占位提示(电脑版才有真功能) */
     .practice-static-hint {
@@ -51,6 +60,7 @@
   <div class="grain" aria-hidden="true"></div>
 
   <header class="masthead">
+    <div id="theme-switch" class="theme-switch" aria-label="配色"></div>
     <div class="mark">
       <span class="mark__en">Lexicon</span>
       <span class="mark__cn">英语词库</span>
@@ -124,5 +134,6 @@
   <div class="foot" id="foot"></div>
 
   <script src="./static/app.js"></script>
+  <script src="./static/theme.js"></script>
 </body>
 </html>

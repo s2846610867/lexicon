@@ -14,7 +14,24 @@
   --muted:      #8d887d;   /* 次要文字 */
   --hair:       rgba(22, 21, 15, 0.10);  /* 细分隔线 */
   --hair-soft:  rgba(22, 21, 15, 0.05);
-  --accent:     #16150f;   /* 唯一“强调”=近黑,不引入彩色 */
+  --accent:     #16150f;   /* 默认强调=近黑;各主题下覆盖为彩色 */
+}
+
+/* ---------- 配色主题(整站,由 theme.js 切换;静态站默认 ink-green) ----------
+   只覆盖纸色 / 文字 / 主色变量,其余样式自动跟随。深色主题额外翻转文字与分隔线。 */
+[data-theme="ink-green"] { --accent: #1f6b47; }
+[data-theme="terracotta"] {
+  --paper: #faf5ee; --paper-deep: #f1e8da; --accent: #c2562f;
+}
+[data-theme="celadon"] {
+  --paper: #f1f5f4; --paper-deep: #e3ece9; --accent: #1f8a7a;
+}
+[data-theme="night"] {
+  --paper: #1b1d23; --paper-deep: #262932;
+  --ink: #e9e5db; --word: #f1ede3;
+  --phon: #767d8c; --trans: #b8b3a8; --muted: #8b8f9c;
+  --hair: rgba(255, 255, 255, 0.14); --hair-soft: rgba(255, 255, 255, 0.06);
+  --accent: #8aa6ff;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -110,7 +127,7 @@ body {
   transition: border-color 0.3s ease;
 }
 .searchbar__input::placeholder { color: #bbb6aa; font-style: italic; }
-.searchbar__input:focus { border-bottom-color: var(--ink); }
+.searchbar__input:focus { border-bottom-color: var(--accent); }
 .searchbar__input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .searchbar__count {
   font-family: "JetBrains Mono", monospace;
@@ -185,7 +202,7 @@ body {
 }
 .entry:hover .play { opacity: 1; }
 .play:hover { color: var(--ink); }
-.play.is-playing { color: var(--ink); animation: pulse 0.6s ease infinite; }
+.play.is-playing { color: var(--accent); animation: pulse 0.6s ease infinite; }
 
 /* ---------- 生词本:导入面板(折叠) ---------- */
 .import-panel {
@@ -230,7 +247,7 @@ body {
   min-height: 140px;
   transition: border-color 0.25s ease;
 }
-.import-panel__input:focus { border-color: var(--ink); }
+.import-panel__input:focus { border-color: var(--accent); }
 .import-panel__input::placeholder { color: #bbb6aa; }
 .import-panel__actions {
   display: flex; align-items: baseline; justify-content: space-between;
@@ -239,9 +256,9 @@ body {
 }
 .import-panel__btn {
   appearance: none; cursor: pointer;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--accent);
   background: transparent;
-  color: var(--ink);
+  color: var(--accent);
   font-family: "Fraunces", "Noto Serif SC", serif;
   font-size: 0.92rem;
   font-weight: 500;
@@ -250,7 +267,7 @@ body {
   border-radius: 2px;
   transition: background 0.2s ease, color 0.2s ease;
 }
-.import-panel__btn:hover { background: var(--ink); color: var(--paper); }
+.import-panel__btn:hover { background: var(--accent); color: var(--paper); }
 .import-panel__btn:disabled {
   cursor: default;
   opacity: 0.4;
@@ -702,8 +719,8 @@ body {
 .daybar__chip:hover { color: var(--trans); border-color: var(--trans); }
 .daybar__chip.is-active {
   color: var(--paper);
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 .daily-title {
   margin-top: 14px;

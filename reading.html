@@ -4,13 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>精读 · Lexicon</title>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem("lexicon_theme");
+        var ok = ["ink-green", "night", "terracotta", "celadon"].indexOf(t) > -1;
+        document.documentElement.setAttribute("data-theme", ok ? t : "ink-green");
+      } catch (e) { document.documentElement.setAttribute("data-theme", "ink-green"); }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Newsreader:opsz,wght@6..72,400;6..72,500&family=JetBrains+Mono:wght@400&family=Noto+Serif+SC:wght@400;500&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="./static/style.css" />
+  <link rel="stylesheet" href="./static/style.css?v=themes" />
   <style>
     /* ===== 精读页专属样式(自包含,不依赖 build_static 同步) ===== */
     .reading-top { display: flex; align-items: baseline; gap: 14px; margin-top: 8px; }
@@ -45,7 +54,7 @@
     .para__en { font-family: "Newsreader", serif; font-size: 1.15rem; line-height: 1.9; color: var(--ink); }
     .rw { cursor: pointer; border-radius: 3px; transition: background 0.12s ease; }
     .rw:hover { background: var(--hair); }
-    .rw.is-active { background: var(--ink); color: var(--paper); }
+    .rw.is-active { background: var(--accent); color: var(--paper); }
     .para__toggle { appearance: none; border: 0; background: none; cursor: pointer; margin-top: 8px;
       font-family: "JetBrains Mono", monospace; font-size: 0.74rem; color: var(--muted); padding: 2px 0; }
     .para__toggle:hover { color: var(--ink); }
@@ -56,7 +65,7 @@
     .word-card {
       position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
       max-width: 720px; margin: 0 auto; background: var(--paper);
-      border-top: 1px solid var(--ink); box-shadow: 0 -8px 30px rgba(22,21,15,0.10);
+      border-top: 1px solid var(--accent); box-shadow: 0 -8px 30px rgba(22,21,15,0.10);
       padding: 18px 24px 22px; animation: cardup 0.18s ease both;
     }
     @keyframes cardup { from { transform: translateY(12px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -72,8 +81,8 @@
       font-family: "JetBrains Mono", monospace; font-size: 0.75rem; color: var(--trans);
       padding: 5px 12px; border-radius: 999px; }
     .play:hover { border-color: var(--ink); color: var(--ink); }
-    .play.is-playing { background: var(--ink); color: var(--paper); }
-    .word-card__add { appearance: none; cursor: pointer; border: 1px solid var(--ink); background: var(--ink);
+    .play.is-playing { background: var(--accent); color: var(--paper); }
+    .word-card__add { appearance: none; cursor: pointer; border: 1px solid var(--accent); background: var(--accent);
       color: var(--paper); font-family: "JetBrains Mono", monospace; font-size: 0.75rem;
       padding: 6px 14px; border-radius: 999px; margin-left: auto; }
     .word-card__add:disabled { opacity: 0.5; cursor: default; }
@@ -84,6 +93,7 @@
   <div class="grain" aria-hidden="true"></div>
 
   <header class="masthead">
+    <div id="theme-switch" class="theme-switch" aria-label="配色"></div>
     <div class="mark">
       <span class="mark__en">Lexicon</span>
       <span class="mark__cn">精读</span>
@@ -105,5 +115,6 @@
   <div id="word-card-host"></div>
 
   <script src="./static/reading.js"></script>
+  <script src="./static/theme.js"></script>
 </body>
 </html>
