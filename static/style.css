@@ -70,8 +70,23 @@ body {
   font-weight: 600;
   font-size: clamp(2.4rem, 7vw, 3.4rem);
   letter-spacing: -0.02em;
-  color: var(--ink);
   line-height: 1;
+  /* 流光:一道主色高光反复掠过标题(Shiny Text,参考 React Bits) */
+  color: var(--ink);
+  background-image: linear-gradient(110deg,
+    var(--ink) 30%,
+    color-mix(in srgb, var(--accent) 60%, white) 50%,
+    var(--ink) 70%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 3.4s ease-in-out infinite;
+}
+@keyframes shine { 0% { background-position: 140% 0; } 100% { background-position: -40% 0; } }
+/* 关闭动效偏好:标题回退为纯色,保证可读 */
+@media (prefers-reduced-motion: reduce) {
+  .mark__en { animation: none; -webkit-text-fill-color: var(--ink); background: none; }
 }
 .mark__cn {
   font-family: "Noto Serif SC", serif;
