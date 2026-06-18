@@ -100,7 +100,8 @@
 
   function ensureDailyLoaded() {
     if (dataCache.daily) return Promise.resolve(dataCache.daily);
-    return fetch(DATA_BASE + "daily.json")
+    // 每日记忆每天更新:加时间戳绕过浏览器/手机缓存,保证总能拿到最新一天
+    return fetch(DATA_BASE + "daily.json?t=" + Date.now())
       .then(function (r) {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
